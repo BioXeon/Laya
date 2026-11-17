@@ -109,6 +109,8 @@ private const val MAX_RECOVERIES = 3
 
 /** Most AutoPlay tracks queued ahead at once, same as Android's MAX_QUEUED_AUTOPLAY. */
 private const val MAX_AUTOPLAY = 10
+/** Tracks a started radio queues. */
+private const val MAX_RADIO = 24
 
 /** How long a source ranked above YouTube gets before a track starts on YouTube regardless (Android's SUBSTITUTE_TIMEOUT_MS). */
 private const val SUBSTITUTE_TIMEOUT_MS = 20_000L
@@ -391,6 +393,29 @@ class IosPlayer(private val engine: AudioEngine, private val scope: CoroutineSco
         engine.seekTo(ms)
         position.seeks++
         position.report(ms)
+    }
+
+    /**
+     * Start radio: a station off [song], like Android's. Playing it already keeps it going and replaces what follows;
+     * any other track starts the station. Nothing changes until the tracks are loaded.
+     */
+    fun startRadio(song: Song) {
+        if (locked()) return
+        scope.launch {
+            val related = YtMusicRepository.radio(youtubeSeedFor(song) ?: song.videoId).getOrNull()
+            val extra = related?.let { QueueBuilder.extend(listOf(song.asQueueEntry(QueueTier.CONTEXT)), it, MAX_RADIO) }
+            if (extra.isNullOrEmpty()) return@launch IosPlayerHost.showMessage("Couldn't load tracks")
+            val tail = extra.map { it.asQueueEntry(QueueTier.AUTOPLAY) }
+            if (this@IosPlayer.song?.videoId == song.videoId && index in queue.indices) {
+                queue = queue.take(index + 1) + tail
+                queueChanged()
+                party.onLocalIntent()
+            } else {
+                play(listOf(song), 0)
+                queue = queue.take(1) + tail
+                queueChanged()
+            }
+        }
     }
 
     fun playNext(song: Song) = enqueue(song, next = true)

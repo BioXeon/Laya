@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.DownloadDone
@@ -240,6 +241,7 @@ internal fun IosSongMenu(
     onDismiss: () -> Unit,
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
+    onStartRadio: (() -> Unit)? = null,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     /** Null hides the row (signed out). */
@@ -302,6 +304,7 @@ internal fun IosSongMenu(
             disliked?.let { Action(if (it) Icons.Rounded.ThumbDown else Icons.Rounded.ThumbDownOffAlt, if (it) "Undo dislike" else "Dislike", onToggleDislike) }
             onAddToPlaylist?.let { Action(Icons.AutoMirrored.Rounded.PlaylistAdd, "Add to playlist", it) }
             DownloadRow(song)
+            onStartRadio?.let { Action(Icons.Rounded.Radio, "Start radio", it) }
             Action(Icons.AutoMirrored.Rounded.PlaylistPlay, "Play next", onPlayNext)
             Action(Icons.AutoMirrored.Rounded.QueueMusic, "Add to queue", onAddToQueue)
             song.albumId?.let { id -> Action(Icons.Rounded.Album, "Open album") { onOpenAlbum(id) } }
