@@ -243,6 +243,7 @@ internal fun IosSongMenu(
     onAddToQueue: () -> Unit,
     onStartRadio: (() -> Unit)? = null,
     onStartAudiusRadio: (() -> Unit)? = null,
+    onStartMixedRadio: (() -> Unit)? = null,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
     /** Null hides the row (signed out). */
@@ -305,6 +306,7 @@ internal fun IosSongMenu(
             disliked?.let { Action(if (it) Icons.Rounded.ThumbDown else Icons.Rounded.ThumbDownOffAlt, if (it) "Undo dislike" else "Dislike", onToggleDislike) }
             onAddToPlaylist?.let { Action(Icons.AutoMirrored.Rounded.PlaylistAdd, "Add to playlist", it) }
             DownloadRow(song)
+            onStartMixedRadio?.let { Action(Icons.Rounded.Radio, "Start mixed radio", it) }
             onStartRadio?.let { Action(Icons.Rounded.Radio, "Start radio", it) }
             onStartAudiusRadio?.let { Action(Icons.Rounded.Radio, "Start Audius radio", it) }
             Action(Icons.AutoMirrored.Rounded.PlaylistPlay, "Play next", onPlayNext)

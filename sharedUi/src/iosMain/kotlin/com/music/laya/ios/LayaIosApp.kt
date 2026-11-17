@@ -1387,7 +1387,9 @@ fun LayaIosApp(engine: AudioEngine, onStatusBarLight: (Boolean) -> Unit = {}) {
                             onAddToQueue = { player.addToQueue(m) },
                             // An Audius track has no YouTube radio; every other track gets both stations.
                             onStartRadio = if (IosAudius.isAudius(m)) null else ({ player.startRadio(m) }),
-                            onStartAudiusRadio = { player.startRadio(m, audius = true) },
+                            onStartAudiusRadio = { player.startRadio(m) { IosAudius.radio(it, 24) } },
+                            // YouTube Music + Deezer + ListenBrainz, merged and ranked; not for Audius-only tracks.
+                            onStartMixedRadio = if (IosAudius.isAudius(m)) null else ({ player.startRadio(m) { IosMixedRadio.radio(it, 24) } }),
                             // Pushed over whatever is under the player, which closes so the page is seen.
                             onOpenAlbum = { sheetMotion.close(); openDetail(it, m.albumName ?: m.title, m.artist, m.thumbnailUrl, BrowseType.ALBUM) },
                             onOpenArtist = { sheetMotion.close(); openDetail(it, m.artist, "Artist", null, BrowseType.ARTIST) },

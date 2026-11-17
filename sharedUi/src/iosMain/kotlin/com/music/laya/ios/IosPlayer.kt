@@ -399,10 +399,10 @@ class IosPlayer(private val engine: AudioEngine, private val scope: CoroutineSco
      * Start radio: a station off [song], like Android's. Playing it already keeps it going and replaces what follows;
      * any other track starts the station. Nothing changes until the tracks are loaded.
      */
-    fun startRadio(song: Song, audius: Boolean = false) {
+    fun startRadio(song: Song, source: (suspend (Song) -> List<Song>?)? = null) {
         if (locked()) return
         scope.launch {
-            val related = if (audius) IosAudius.radio(song, MAX_RADIO)
+            val related = if (source != null) source(song)
             else YtMusicRepository.radio(youtubeSeedFor(song) ?: song.videoId).getOrNull()
             val extra = related?.let { QueueBuilder.extend(listOf(song.asQueueEntry(QueueTier.CONTEXT)), it, MAX_RADIO) }
             if (extra.isNullOrEmpty()) return@launch IosPlayerHost.showMessage("Couldn't load tracks")
