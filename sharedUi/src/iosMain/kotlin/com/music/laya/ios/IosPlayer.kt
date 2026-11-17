@@ -614,7 +614,18 @@ class IosPlayer(private val engine: AudioEngine, private val scope: CoroutineSco
                 ?: error("No enabled source could serve ${song.title}")
             return fromSource(stream, late.takeIf { !it.isCompleted })
         }
-        if (!SourceResolver.canSubstituteForYouTube()) return youtube(song.videoId)
+        // Why an addon is or isn't asked: Copy log shows the quality ceiling, the network and every source's state.
+        TrackLog.d(
+            "Laya",
+            "sources for '${song.title}': quality=${AppSettings.effectiveAudioQuality} metered=${AppSettings.meteredConnection.value} " +
+                "asked=${SourceRegistry.activeForPlayback().map { "${it.displayName}(${it.kind})" }} " +
+                "configured=${SourceRegistry.configs.value.map { "${it.displayName}(${it.kind},${if (it.enabled) "on" else "off"})" }}",
+            about = song.videoId,
+        )
+        if (!SourceResolver.canSubstituteForYouTube()) {
+            TrackLog.d("Laya", "no source ranks above YouTube for this quality; playing YouTube", about = song.videoId)
+            return youtube(song.videoId)
+        }
         if (patient) {
             val warmed = runCatching { SourceResolver.prefetchSubstitute(target, patient = true) }.getOrNull()
             return warmed?.let { fromSource(it) } ?: youtube(song.videoId)
