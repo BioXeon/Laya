@@ -399,10 +399,11 @@ class IosPlayer(private val engine: AudioEngine, private val scope: CoroutineSco
      * Start radio: a station off [song], like Android's. Playing it already keeps it going and replaces what follows;
      * any other track starts the station. Nothing changes until the tracks are loaded.
      */
-    fun startRadio(song: Song) {
+    fun startRadio(song: Song, audius: Boolean = false) {
         if (locked()) return
         scope.launch {
-            val related = YtMusicRepository.radio(youtubeSeedFor(song) ?: song.videoId).getOrNull()
+            val related = if (audius) IosAudius.radio(song, MAX_RADIO)
+            else YtMusicRepository.radio(youtubeSeedFor(song) ?: song.videoId).getOrNull()
             val extra = related?.let { QueueBuilder.extend(listOf(song.asQueueEntry(QueueTier.CONTEXT)), it, MAX_RADIO) }
             if (extra.isNullOrEmpty()) return@launch IosPlayerHost.showMessage("Couldn't load tracks")
             val tail = extra.map { it.asQueueEntry(QueueTier.AUTOPLAY) }
@@ -599,6 +600,10 @@ class IosPlayer(private val engine: AudioEngine, private val scope: CoroutineSco
         }
         // Reverted by hand: YouTube's own audio, whatever the track was queued from, until "Upgrade quality".
         if (IosOriginalVersion.isPinned(song.videoId)) youtubeSeedFor(song)?.let { return youtube(it) }
+        if (IosAudius.isAudius(song)) {
+            val url = IosAudius.streamUrl(song) ?: error("Audius couldn't serve ${song.title}")
+            return Opened(url, emptyMap(), "audio/mpeg", -1L, "Audius")
+        }
         val target = TrackMatcher.targetOf(song)
         SourceRegistry.parseTrackKey(song.videoId)?.let { (configId, trackId) ->
             // Addon rows play as the row the listener picked, never its Atmos sibling or YouTube's copy (MIX_PARAM).

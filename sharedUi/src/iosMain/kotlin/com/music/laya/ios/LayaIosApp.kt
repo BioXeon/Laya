@@ -1385,7 +1385,9 @@ fun LayaIosApp(engine: AudioEngine, onStatusBarLight: (Boolean) -> Unit = {}) {
                             onDismiss = { menuSong = null },
                             onPlayNext = { player.playNext(m) },
                             onAddToQueue = { player.addToQueue(m) },
-                            onStartRadio = { player.startRadio(m) },
+                            // An Audius track has no YouTube radio; every other track gets both stations.
+                            onStartRadio = if (IosAudius.isAudius(m)) null else ({ player.startRadio(m) }),
+                            onStartAudiusRadio = { player.startRadio(m, audius = true) },
                             // Pushed over whatever is under the player, which closes so the page is seen.
                             onOpenAlbum = { sheetMotion.close(); openDetail(it, m.albumName ?: m.title, m.artist, m.thumbnailUrl, BrowseType.ALBUM) },
                             onOpenArtist = { sheetMotion.close(); openDetail(it, m.artist, "Artist", null, BrowseType.ARTIST) },
